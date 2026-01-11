@@ -1,3 +1,4 @@
-API.env
+.env
+main
 *.exe
-/bin/
+vendor/
