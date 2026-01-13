@@ -1,60 +1,60 @@
 # Aviasales Telegram Price Monitor Bot
 
-Профессиональный инструмент на языке Go для автоматического отслеживания стоимости авиабилетов через API Aviasales (Travelpayouts). Бот работает в фоновом режиме, анализирует изменения цен и мгновенно уведомляет пользователя в Telegram.
+A high-performance **Go-based** service for automated flight price tracking via the **Aviasales (Travelpayouts) API**. The bot operates as a background worker, analyzing price fluctuations and delivering instant Telegram notifications [file:1][web:8].
 
-## Ключевые особенности
+## Key Features
 
-- **Автономный воркер**: Использование горутин позволяет боту одновременно обрабатывать команды пользователей и выполнять фоновые запросы к API без задержек.
-- **Интеллектуальная система уведомлений**: Бот сравнивает текущую цену с последней сохраненной в базе данных. Вы получите сообщение только в том случае, если цена изменилась (выросла или упала).
-- **Поддержка мультиканальности**: Архитектура базы данных позволяет одному боту обслуживать множество пользователей одновременно, сохраняя индивидуальные подписки для каждого chat_id.
+- **Concurrent Background Worker**: Leverages **Goroutines** to handle background API polling and user commands simultaneously, ensuring zero latency for the end user [file:1][web:16].
+- **State-Tracking Notification System**: Implements logic to compare real-time prices with historical database records, notifying users only when a price change is detected [file:1].
+- **Scalable Architecture**: Database-driven design enables the bot to serve multiple users concurrently, maintaining individual subscription lists for each `chat_id` [file:1].
 
-## Технологический стек
+## Tech Stack
 
-- **Язык**: Go (Golang) 1.25.
-- **База данных**: PostgreSQL.
-- **Библиотеки**:
-  - `github.com/go-telegram-bot-api/telegram-bot-api/v5` — взаимодействие с Telegram API.
-  - `github.com/jmoiron/sqlx` — расширенные возможности работы с SQL и маппинга данных.
-  - `github.com/joho/godotenv` — управление конфигурациями.
-- **API**: Aviasales Data API (Travelpayouts) V3.
+- **Language**: Go (Golang) 1.25 [file:1].
+- **Database**: **PostgreSQL** (with `sqlx` for efficient data mapping).
+- **Integrations**:
+  - `telegram-bot-api/v5`: Telegram Bot API wrapper.
+  - `joho/godotenv`: Environment configuration.
+- **API**: Aviasales Data API V3 (**REST/HTTP**) [web:1].
 
-## Установка и запуск
 
-### 1. Клонирование репозитория
+## Installation & Setup
+
+### 1. Clone the Repository
 git clone https://github.com/Dzetner/go-tg_bot-price-monitor.git
 cd go-tg_bot-price-monitor
 
-### 2. Настройка конфигурации
-Создайте файл .env и укажите ваши данные:
+### 2. Configuration
+Create a .env file and provide your credentials:
 TELEGRAM_TOKEN=123456:ABC-DEF1234...
 TRAVELPAYOUTS_TOKEN=ваш_API_токен
 DB_DSN=postgres://postgres:password@localhost:5432/bot_db?sslmode=disable
 
-### 3. Запуск инфраструктуры
-Для быстрого развертывания базы данных используйте Docker:
+### 3. Infrastructure Deployment
+Use Docker for rapid database deployment:
 docker-compose up -d
 
-### 4. Компиляция и запуск
+### 4. Compilation & Execution
 go run main.go
 
-## Команды бота
+## Bot Commands
 
-- /add [ORIGIN] [DEST] — Добавляет новое направление для слежки. Пример: /add MOW HRG
-- /list — Выводит список всех ваших активных подписок с актуальными ценами на текущий момент.
-- /del [ORIGIN-DEST] — Останавливает мониторинг и удаляет подписку. Пример: /del MOW-HRG
+- /add [ORIGIN] [DEST] — Adds a new route for monitoring. Example: /add MOW HRG
+- /list — Displays a list of all your active subscriptions with current prices
+- /del [ORIGIN-DEST] — Stops monitoring and deletes the subscription. Example: /del MOW-HRG
 
-## Как это работает (Architecture)
+## How It Works (Architecture)
 
-1. Фоновый воркер: При старте бота запускается отдельная долгоживущая горутина (Long-running Goroutine), которая отвечает за мониторинг цен.
-2. Цикл проверки: Внутри горутины используется таймер (time.Ticker), который каждые 5 минут инициирует процесс опроса:
-   - Бот выгружает список всех активных подписок из PostgreSQL.
-   - Для каждого направления выполняется HTTP-запрос к API Aviasales.
-3. Сравнение состояний: Если цена билета из ответа API отличается от сохраненного значения в базе данных, бот:
-   - Отправляет уведомление пользователю в Telegram.
-   - Обновляет поле last_value в БД для отслеживания будущих изменений.
+1. Background Worker: Upon startup, a dedicated long-running Goroutine is launched to handle price monitoring.
+2. Polling Cycle: Inside the goroutine, a time.Ticker initiates a check every 5 minutes:
+   - The bot retrieves all active subscriptions from PostgreSQL.
+   - For each route, it performs an HTTP request to the Aviasales API
+3. State Comparison: If the price from the API differs from the value stored in the database:
+   - The bot sends a notification to the user via Telegram.
+   - The last_value field in the database is updated to track future changes.
 
-## Планы по развитию
+## Development Roadmap
 
-- Реализация поиска билетов на конкретные месяцы.
-- Добавление графиков изменения цен прямо в чат Telegram.
-- Интеграция с другими агрегаторами для более широкого поиска.
+- Implementation of ticket searching for specific months.
+- Adding price fluctuation charts directly within the Telegram chat.
+- Integration with other aggregators for broader search results.
